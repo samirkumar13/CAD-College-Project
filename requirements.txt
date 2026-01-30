@@ -1,0 +1,20 @@
+# Flask Web Framework
+Flask==3.0.0
+Werkzeug==3.0.0
+
+# Computer Vision
+opencv-python==4.8.1.78
+
+# YOLO Object Detection (CPU optimized)
+ultralytics==8.3.163
+onnx==1.15.0
+onnxruntime==1.17.0
+
+# Data Processing
+numpy==1.24.3
+Pillow==10.1.0
+
+# Utilities
+requests==2.31.0
+tqdm==4.66.1
+pyyaml==6.0.1

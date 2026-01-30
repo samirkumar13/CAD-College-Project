@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Cantonment Area Detection System</title>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='icon.ico') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Rajdhani:wght@500;600;700&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+  <div class="app-container">
+
+    <!-- HUD Header -->
+    <header class="hud-header">
+      <div class="logo-section">
+        <img src="{{ url_for('static', filename='icon.ico') }}" alt="Logo" class="logo-icon" />
+        <div class="logo-text">
+          <h1>CANTONMENT AREA DETECTION SYSTEM</h1>
+        </div>
+      </div>
+      <div class="system-status">
+        <div class="status-item">
+          <span class="label">AI MODULE</span>
+          <span id="ollamaStatus" class="value checking">INITIALIZING...</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Dashboard Grid -->
+    <main class="dashboard-grid">
+
+      <!-- LEFT PANEL: Controls & Status -->
+      <section class="panel control-panel">
+        <div class="panel-header">
+          <h3>SYSTEM CONTROLS</h3>
+        </div>
+        <div class="panel-content">
+
+          <div class="control-group">
+            <label>SOURCE MATERIAL</label>
+            <div class="file-upload-wrapper">
+              <button id="uploadBtn" class="tactical-btn primary">
+                UPLOAD IMAGERY
+              </button>
+              <div id="fileInfo" class="file-info-text">NO DATA LOADED</div>
+            </div>
+            <!-- hidden input -->
+            <input type="file" id="fileInput" accept="image/*" style="display:none" />
+          </div>
+
+          <div class="control-group">
+            <label>OPERATIONS</label>
+            <button id="detectBtn" class="tactical-btn action" disabled>
+              INITIATE ANALYSIS
+            </button>
+          </div>
+
+          <div class="separator"></div>
+
+          <div class="stats-group">
+            <label>DETECTION METRICS</label>
+            <div class="stat-box">
+              <span class="stat-label">OBJECTS FOUND</span>
+              <span id="totalCount" class="stat-value">0</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- CENTER PANEL: Main Viewport -->
+      <section class="panel viewport-panel">
+        <div class="panel-header">
+          <h3>TACTICAL VIEWPORT</h3>
+        </div>
+        <div class="panel-content no-padding">
+          <div class="viewport-container" id="boxesContainer">
+
+            <!-- Default State -->
+            <div id="placeholderState" class="viewport-placeholder">
+              <div class="reticle"></div>
+              <p>AWAITING SATELLITE FEED</p>
+            </div>
+
+            <!-- Preview Image -->
+            <div id="previewBox" class="viewport-layer" style="display:none">
+              <img id="previewImg" src="" alt="Preview" />
+              <div class="overlay-grid"></div>
+            </div>
+
+            <!-- Result Image -->
+            <div id="resultBox" class="viewport-layer" style="display:none">
+              <img id="resultImg" src="" alt="Result" />
+              <div class="processing-overlay" id="processingText" style="display:none">
+                <div class="scanner-line"></div>
+                <span>ANALYZING TARGETS...</span>
+              </div>
+            </div>
+
+          </div>
+          <div class="viewport-footer">
+            <label class="toggle-switch" id="labelToggleWrapper" style="display:none">
+              <input type="checkbox" id="labelToggle" checked />
+              <span class="toggle-slider"></span>
+              <span class="toggle-label">SHOW LABELS</span>
+            </label>
+            <a id="downloadLink" href="#" class="tactical-link" style="display:none">DOWNLOAD</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT PANEL: Intelligence -->
+      <section class="panel intel-panel">
+        <div class="panel-header">
+          <h3>INTELLIGENCE REPORT</h3>
+        </div>
+        <div class="panel-content scrollable">
+
+          <!-- Detected Objects List -->
+          <div class="intel-section">
+            <h4>DETECTED ASSETS</h4>
+            <ul class="class-list" id="detectionList">
+              <li class="empty-state">-- NO DATA --</li>
+            </ul>
+          </div>
+
+          <div class="separator dashed"></div>
+
+          <!-- Semantic Analysis -->
+          <div class="intel-section">
+            <h4>SEMANTIC INTERPRETATION</h4>
+            <div id="semanticSection" class="semantic-content">
+              <p class="semantic-text typing-effect">System ready. Awaiting detection data...</p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+
+</html>

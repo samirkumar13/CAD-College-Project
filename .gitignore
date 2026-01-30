@@ -1,0 +1,41 @@
+# Virtual Environment
+venv/
+env/
+.venv/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+yolo_app_debug.log
+
+# Uploaded and Generated Files
+static/uploads/
+static/results/
+
+# Documentation (not needed for code backup)
+*.docx
+*.pdf
+*.png
+!static/icon.ico
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Test files
+testmodel.py
+
+# Environment
+.env
+.env.local
