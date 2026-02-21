@@ -537,8 +537,14 @@ def serve_result(filename):
 # History API endpoints
 @app.route("/history")
 def history_page():
-    """Serve the detection history page"""
-    return render_template("history.html")
+    """Serve the detection history page with initial data for instant loading"""
+    try:
+        stats = db.get_stats()
+        history = db.get_history(limit=50)
+        return render_template("history.html", stats=stats, history=history)
+    except Exception as e:
+        logger.error(f"Failed to load history page data: {e}")
+        return render_template("history.html", stats={}, history=[])
 
 @app.route("/api/history")
 def api_history():
