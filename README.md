@@ -63,17 +63,7 @@ CAD-College-Project/
 │   └── icon.ico           # Web favicon
 ├── templates/             # HTML templates
 │   └── index.html         # Main dashboard interface
-├── training_logs/         # Custom model training history & metrics
-│   ├── weights/           # Trained model checkpoints
-│   │   ├── best.pt        # Optimal weights
-│   │   └── last.pt        # Final weights
-│   ├── args.yaml          # Hyperparameters
-│   ├── results.csv        # Epoch metrics
-│   ├── results.png        # Training graphs
-│   ├── confusion_matrix.png
-│   ├── *_curve.png        # PR/F1 curve plots
-│   ├── train_batch*.jpg   # Training examples
-│   └── val_batch*.jpg     # Validation examples
+├── training_logs         # Custom model training history & metrics
 ├── app.py                 # Flask web server & inference logic
 ├── ARCHITECTURE.md        # System architecture documentation
 ├── best.pt                # Primary trained YOLOv8 model
