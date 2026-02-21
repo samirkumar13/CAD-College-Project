@@ -57,32 +57,38 @@ To enable the AI-powered analysis feature:
 
 ```
 cant_backup/
-├── app.py                 # Main Flask application
-├── database.py            # SQLite database interactions
-├── testmodel.py           # Model testing script
-├── best.pt                # Trained YOLOv8 model weights
-├── requirements.txt       # Python dependencies
-├── .gitignore             # Git ignore rules
-├── ARCHITECTURE.md        # Architecture overview
-├── static/
-│   ├── css/style.css     # Tactical dark theme styles
-│   ├── js/main.js        # Frontend JavaScript
-│   ├── icon.ico          # Application favicon/logo
-│   ├── uploads/          # Directory for uploaded images
-│   └── results/          # Directory for processed overlays
-├── templates/
-│   └── index.html        # Main HTML template
-└── training_logs/        # Model training artifacts
-    ├── args.yaml         # Training configuration
-    ├── results.csv       # Training metrics
-    ├── results.png       # Training curves visualization
-    ├── confusion_matrix.png
-    ├── *_curve.png       # F1, PR, P, R curves
-    ├── train_batch*.jpg  # Training sample images
-    ├── val_batch*.jpg    # Validation sample images
-    └── weights/
-        ├── best.pt       # Best model weights
-        └── last.pt       # Final epoch weights
+├── .git/                  # Git repository data
+├── __pycache__/           # Compiled Python files
+├── static/                # Static web assets
+│   ├── css/               # Stylesheets (style.css)
+│   ├── js/                # Client-side scripts (main.js)
+│   ├── results/           # Processed image output
+│   ├── uploads/           # User uploaded images
+│   └── icon.ico           # Web favicon
+├── templates/             # HTML templates
+│   └── index.html         # Main dashboard interface
+├── training_logs/         # Custom model training history & metrics
+│   ├── weights/           # Trained model checkpoints
+│   │   ├── best.pt        # Optimal weights
+│   │   └── last.pt        # Final weights
+│   ├── args.yaml          # Hyperparameters
+│   ├── results.csv        # Epoch metrics
+│   ├── results.png        # Training graphs
+│   ├── confusion_matrix.png
+│   ├── *_curve.png        # PR/F1 curve plots
+│   ├── train_batch*.jpg   # Training examples
+│   └── val_batch*.jpg     # Validation examples
+├── venv/                  # Python virtual environment
+├── .gitignore             # Git excluded files
+├── app.py                 # Flask web server & inference logic
+├── ARCHITECTURE.md        # System architecture documentation
+├── best.pt                # Primary trained YOLOv8 model
+├── database.py            # SQLite database manager
+├── detections.db          # SQLite database (stores history)
+├── README.md              # Project documentation
+├── requirements.txt       # Python package dependencies
+├── testmodel.py           # Quick CLI testing script
+└── yolo_app_debug.log     # Application debug logs
 ```
 
 ## Usage
