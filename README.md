@@ -60,8 +60,6 @@ CAD-College-Project/
 ├── static/                # Static web assets
 │   ├── css/               # Stylesheets (style.css)
 │   ├── js/                # Client-side scripts (main.js)
-│   ├── results/           # Processed image output
-│   ├── uploads/           # User uploaded images
 │   └── icon.ico           # Web favicon
 ├── templates/             # HTML templates
 │   └── index.html         # Main dashboard interface
