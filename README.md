@@ -58,13 +58,18 @@ To enable the AI-powered analysis feature:
 ```
 cant_backup/
 ├── app.py                 # Main Flask application
+├── database.py            # SQLite database interactions
+├── testmodel.py           # Model testing script
 ├── best.pt                # Trained YOLOv8 model weights
 ├── requirements.txt       # Python dependencies
-├── icon.ico              # Application icon
+├── .gitignore             # Git ignore rules
+├── ARCHITECTURE.md        # Architecture overview
 ├── static/
 │   ├── css/style.css     # Tactical dark theme styles
 │   ├── js/main.js        # Frontend JavaScript
-│   └── icon.ico          # Favicon
+│   ├── icon.ico          # Application favicon/logo
+│   ├── uploads/          # Directory for uploaded images
+│   └── results/          # Directory for processed overlays
 ├── templates/
 │   └── index.html        # Main HTML template
 └── training_logs/        # Model training artifacts
