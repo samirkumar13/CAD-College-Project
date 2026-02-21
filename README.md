@@ -20,8 +20,8 @@ A Flask-based web application for detecting military/cantonment infrastructure i
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/samirkumar13/cant_backup.git
-cd cant_backup
+git clone https://github.com/samirkumar13/CAD-College-Project.git
+cd CAD-College-Project
 
 # 2. Create virtual environment
 python -m venv venv
@@ -56,9 +56,7 @@ To enable the AI-powered analysis feature:
 ## Project Structure
 
 ```
-cant_backup/
-├── .git/                  # Git repository data
-├── __pycache__/           # Compiled Python files
+CAD-College-Project/
 ├── static/                # Static web assets
 │   ├── css/               # Stylesheets (style.css)
 │   ├── js/                # Client-side scripts (main.js)
@@ -78,18 +76,16 @@ cant_backup/
 │   ├── *_curve.png        # PR/F1 curve plots
 │   ├── train_batch*.jpg   # Training examples
 │   └── val_batch*.jpg     # Validation examples
-├── venv/                  # Python virtual environment
-├── .gitignore             # Git excluded files
 ├── app.py                 # Flask web server & inference logic
 ├── ARCHITECTURE.md        # System architecture documentation
 ├── best.pt                # Primary trained YOLOv8 model
 ├── database.py            # SQLite database manager
-├── detections.db          # SQLite database (stores history)
 ├── README.md              # Project documentation
 ├── requirements.txt       # Python package dependencies
-├── testmodel.py           # Quick CLI testing script
-└── yolo_app_debug.log     # Application debug logs
+└── testmodel.py           # Quick CLI testing script
 ```
+
+> **Note:** Directories like `.git`, `venv`, `__pycache__`, and `detections.db` are excluded from version control but will be generated during setup/runtime.
 
 ## Usage
 
@@ -120,4 +116,4 @@ cant_backup/
 For academic/personal use only.
 
 ---
-*Last updated: January 2026*
+*Last updated: February 2026*
