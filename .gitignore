@@ -23,6 +23,9 @@ yolo_app_debug.log
 static/uploads/
 static/results/
 
+# Database
+*.db
+
 # Documentation (not needed for code backup)
 *.docx
 *.pdf

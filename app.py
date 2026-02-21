@@ -5,11 +5,13 @@ import sys
 import traceback
 import logging
 import requests
+import time
 from flask import Flask, render_template, request, jsonify, url_for, send_from_directory
 from ultralytics import YOLO
 import cv2
 import webbrowser
 from threading import Timer
+import database as db
 
 # -----------------------
 # Setup Logging (UTF-8 for Windows)
@@ -368,6 +370,8 @@ def process():
 
         # Read and process image (rest same as before - abbreviated for space)
         try:
+            start_time = time.time()  # Start timing for DB logging
+            
             img = cv2.imread(filepath)
             if img is None:
                 logger.error(f"[ERROR] OpenCV failed to read image")
@@ -380,7 +384,7 @@ def process():
                 filepath, 
                 imgsz=IMG_SIZE, 
                 conf=CONF_THRESH, 
-                device="cpu",
+                device="cpu",  # GPU requires PyTorch with CUDA
                 verbose=False
             )
             
@@ -419,6 +423,9 @@ def process():
             orig = cv2.imread(filepath)
             orig_no_labels = orig.copy()  # Keep a copy for the no-labels version
             
+            # Collect object details for database
+            detection_objects = []
+            
             if len(confs) > 0:
                 h, w = orig.shape[:2]
                 thickness = max(2, int(round(min(h, w) / 300.0)))
@@ -447,6 +454,14 @@ def process():
                     label_y2 = y1
                     cv2.rectangle(orig, (x1, label_y1), (x1 + tw + 6, label_y2), color, -1)
                     cv2.putText(orig, label, (x1 + 3, label_y2 - 4), cv2.FONT_HERSHEY_SIMPLEX, font_scale, (255, 255, 255), font_thickness, cv2.LINE_AA)
+                    
+                    # Collect object details for database
+                    detection_objects.append({
+                        'class_name': cname,
+                        'confidence': float(conf),
+                        'bbox_x1': x1, 'bbox_y1': y1,
+                        'bbox_x2': x2, 'bbox_y2': y2
+                    })
 
             # Save BOTH versions
             result_filename = f"result_{filename}"
@@ -475,6 +490,28 @@ def process():
                 "semantic_explanation": semantic_explanation
             }
             
+            # Log to database
+            processing_time_ms = (time.time() - start_time) * 1000
+            threat_level = semantic_explanation.get('threat_level') if semantic_explanation else None
+            h, w = orig.shape[:2]
+            
+            try:
+                detection_id = db.log_detection(
+                    image_name=filename,
+                    image_width=w,
+                    image_height=h,
+                    total_objects=total_detections,
+                    processing_time_ms=processing_time_ms,
+                    result_image_path=f"results/{result_filename}",
+                    result_image_nolabel_path=f"results/{result_filename_no_labels}",
+                    threat_level=threat_level,
+                    llm_analysis=semantic_explanation,
+                    objects=detection_objects
+                )
+                logger.info(f"[DB] Detection logged with ID: {detection_id}")
+            except Exception as db_error:
+                logger.warning(f"[DB] Failed to log detection: {db_error}")
+            
             logger.info(f"[OK] Response ready: total={total_detections}, ollama={ollama_available}")
             return jsonify(response), 200
             
@@ -496,6 +533,44 @@ def serve_upload(filename):
 def serve_result(filename):
     logger.debug(f"[SERVE] Result: {filename}")
     return send_from_directory(RESULT_FOLDER, filename)
+
+# History API endpoints
+@app.route("/history")
+def history_page():
+    """Serve the detection history page"""
+    return render_template("history.html")
+
+@app.route("/api/history")
+def api_history():
+    """Get detection history with pagination"""
+    limit = request.args.get('limit', 50, type=int)
+    offset = request.args.get('offset', 0, type=int)
+    
+    history = db.get_history(limit=limit, offset=offset)
+    return jsonify({"history": history})
+
+@app.route("/api/history/<int:detection_id>")
+def api_detection_details(detection_id):
+    """Get full details for a specific detection"""
+    details = db.get_detection_details(detection_id)
+    if not details:
+        return jsonify({"error": "Detection not found"}), 404
+    return jsonify(details)
+
+@app.route("/api/stats")
+def api_stats():
+    """Get overall detection statistics"""
+    stats = db.get_stats()
+    return jsonify(stats)
+
+@app.route("/api/history/<int:detection_id>", methods=["DELETE"])
+def api_delete_detection(detection_id):
+    """Delete a detection record"""
+    deleted = db.delete_detection(detection_id)
+    if deleted:
+        return jsonify({"success": True})
+    return jsonify({"error": "Detection not found"}), 404
+
 
 def open_browser():
     webbrowser.open('http://127.0.0.1:5000/')

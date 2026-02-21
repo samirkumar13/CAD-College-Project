@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Detection History - CADS</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='icon.ico') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Rajdhani:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        /* Override main stylesheet constraints */
+        html,
+        body {
+            height: auto;
+            min-height: 100vh;
+            overflow-y: auto !important;
+        }
+
+        .app-container {
+            height: auto;
+            min-height: 100vh;
+            overflow: visible;
+        }
+
+        .history-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            padding-bottom: 60px;
+        }
+
+        /* Stats Grid - Horizontal Row */
+        .stats-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            flex: 1;
+            min-width: 180px;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.08), rgba(0, 255, 136, 0.02));
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 12px;
+            padding: 24px 20px;
+            text-align: center;
+            transition: transform 0.2s, border-color 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(0, 255, 136, 0.6);
+        }
+
+        .stat-value {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 36px;
+            color: #00ff88;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+
+        /* History Grid */
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .history-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .history-card:hover {
+            border-color: #00ff88;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 255, 136, 0.15);
+        }
+
+        .history-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .history-card img:hover {
+            opacity: 0.9;
+        }
+
+        .history-card-info {
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .history-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .history-timestamp {
+            font-size: 12px;
+            color: #777;
+        }
+
+        .threat-badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .threat-LOW {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+        }
+
+        .threat-MEDIUM {
+            background: rgba(255, 200, 0, 0.2);
+            color: #ffc800;
+        }
+
+        .threat-HIGH {
+            background: rgba(255, 100, 0, 0.2);
+            color: #ff6400;
+        }
+
+        .threat-CRITICAL {
+            background: rgba(255, 0, 0, 0.2);
+            color: #ff4444;
+        }
+
+        .history-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .history-stats span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Back Link */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #00ff88;
+            text-decoration: none;
+            margin-bottom: 25px;
+            font-size: 14px;
+            padding: 8px 16px;
+            background: rgba(0, 255, 136, 0.1);
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .back-link:hover {
+            background: rgba(0, 255, 136, 0.2);
+        }
+
+        .page-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 24px;
+            margin-bottom: 24px;
+            color: #fff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 12px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: #555;
+            grid-column: 1 / -1;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 8px;
+            box-shadow: 0 0 50px rgba(0, 255, 136, 0.2);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 40px;
+            color: #fff;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover {
+            color: #00ff88;
+        }
+
+        /* Detail Modal */
+        .detail-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 40px 20px;
+        }
+
+        .detail-modal.active {
+            display: block;
+        }
+
+        .detail-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .detail-image {
+            width: 100%;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+
+        .detail-info {
+            color: #ccc;
+        }
+
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .detail-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 24px;
+            color: #fff;
+        }
+
+        .detail-section {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .detail-section h4 {
+            color: #00ff88;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .detail-section p {
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .objects-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .object-tag {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .no-analysis {
+            color: #555;
+            font-style: italic;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .detail-content {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                flex-direction: column;
+            }
+
+            .stat-card {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <header class="hud-header">
+            <div class="logo-section">
+                <img src="{{ url_for('static', filename='icon.ico') }}" alt="Logo" class="logo-icon" />
+                <div class="logo-text">
+                    <h1>DETECTION HISTORY</h1>
+                </div>
+            </div>
+        </header>
+
+        <main class="history-container">
+            <a href="/" class="back-link">← Back to Detection</a>
+
+            <!-- Stats Section -->
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalDetections">-</div>
+                    <div class="stat-label">Total Scans</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalObjects">-</div>
+                    <div class="stat-label">Objects Detected</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="avgTime">-</div>
+                    <div class="stat-label">Avg. Time (ms)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="criticalCount">-</div>
+                    <div class="stat-label">Critical Threats</div>
+                </div>
+            </div>
+
+            <!-- History Grid -->
+            <h2 class="page-title">Recent Detections</h2>
+            <div class="history-grid" id="historyGrid">
+                <div class="empty-state">Loading history...</div>
+            </div>
+        </main>
+
+        <!-- Detail Modal -->
+        <div class="detail-modal" id="detailModal">
+            <div class="detail-content">
+                <div>
+                    <img class="detail-image" id="detailImage" src="" alt="Detection" />
+                </div>
+                <div class="detail-info">
+                    <div class="detail-header">
+                        <span class="detail-title" id="detailTitle">Detection Details</span>
+                        <span class="modal-close" onclick="closeDetailModal()"
+                            style="position:static;font-size:28px;">×</span>
+                    </div>
+                    <div class="detail-section">
+                        <h4>📊 Detection Info</h4>
+                        <p id="detailMeta">Loading...</p>
+                    </div>
+                    <div class="detail-section">
+                        <h4>🎯 Detected Objects</h4>
+                        <div class="objects-list" id="detailObjects">-</div>
+                    </div>
+                    <div class="detail-section">
+                        <h4>⚠️ Threat Assessment</h4>
+                        <p id="detailThreat">-</p>
+                    </div>
+                    <div class="detail-section">
+                        <h4>📝 Analysis Summary</h4>
+                        <p id="detailSummary">-</p>
+                    </div>
+                    <div class="detail-section">
+                        <h4>💡 Recommendations</h4>
+                        <p id="detailRecs">-</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const els = {
+            historyGrid: document.getElementById('historyGrid'),
+            totalDetections: document.getElementById('totalDetections'),
+            totalObjects: document.getElementById('totalObjects'),
+            avgTime: document.getElementById('avgTime'),
+            criticalCount: document.getElementById('criticalCount'),
+            modal: document.getElementById('imageModal'),
+            modalImage: document.getElementById('modalImage')
+        };
+
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/stats');
+                const data = await res.json();
+                els.totalDetections.textContent = data.total_detections || 0;
+                els.totalObjects.textContent = data.total_objects_detected || 0;
+                els.avgTime.textContent = data.avg_processing_time_ms || 0;
+                els.criticalCount.textContent = data.threat_level_breakdown?.CRITICAL || 0;
+            } catch (e) {
+                console.error('Failed to load stats:', e);
+            }
+        }
+
+        async function loadHistory() {
+            try {
+                const res = await fetch('/api/history?limit=50');
+                const data = await res.json();
+
+                if (!data.history || data.history.length === 0) {
+                    els.historyGrid.innerHTML = '<div class="empty-state">No detections yet. Run a detection to see history.</div>';
+                    return;
+                }
+
+                els.historyGrid.innerHTML = data.history.map(item => `
+          <div class="history-card" onclick="showDetail(${item.id})" style="cursor:pointer;">
+            <img src="/static/${item.result_image_path}" alt="${item.image_name}" />
+            <div class="history-card-info">
+              <div class="history-card-header">
+                <span class="history-timestamp">${new Date(item.timestamp).toLocaleString()}</span>
+                ${item.threat_level ? `<span class="threat-badge threat-${item.threat_level}">${item.threat_level}</span>` : ''}
+              </div>
+              <div class="history-stats">
+                <span>📦 ${item.total_objects} objects</span>
+                <span>⏱️ ${Math.round(item.processing_time_ms)}ms</span>
+                <span>📐 ${item.image_width}x${item.image_height}</span>
+              </div>
+            </div>
+          </div>
+        `).join('');
+            } catch (e) {
+                els.historyGrid.innerHTML = '<div class="empty-state">Failed to load history.</div>';
+                console.error('Failed to load history:', e);
+            }
+        }
+
+        // Detail modal
+        const detailModal = document.getElementById('detailModal');
+        const detailEls = {
+            image: document.getElementById('detailImage'),
+            title: document.getElementById('detailTitle'),
+            meta: document.getElementById('detailMeta'),
+            objects: document.getElementById('detailObjects'),
+            threat: document.getElementById('detailThreat'),
+            summary: document.getElementById('detailSummary'),
+            recs: document.getElementById('detailRecs')
+        };
+
+        async function showDetail(id) {
+            detailModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+
+            // Reset content
+            detailEls.meta.textContent = 'Loading...';
+            detailEls.objects.innerHTML = '-';
+            detailEls.threat.textContent = '-';
+            detailEls.summary.textContent = '-';
+            detailEls.recs.textContent = '-';
+
+            try {
+                const res = await fetch(`/api/history/${id}`);
+                const data = await res.json();
+
+                detailEls.image.src = `/static/${data.result_image_path}`;
+                detailEls.title.textContent = data.image_name || 'Detection Details';
+                detailEls.meta.innerHTML = `
+          <strong>Time:</strong> ${new Date(data.timestamp).toLocaleString()}<br>
+          <strong>Size:</strong> ${data.image_width} × ${data.image_height}<br>
+          <strong>Processing:</strong> ${Math.round(data.processing_time_ms)}ms
+        `;
+
+                // Objects
+                if (data.objects && data.objects.length > 0) {
+                    detailEls.objects.innerHTML = data.objects.map(o =>
+                        `<span class="object-tag">${o.class_name} (${(o.confidence * 100).toFixed(0)}%)</span>`
+                    ).join('');
+                } else {
+                    detailEls.objects.innerHTML = '<span class="no-analysis">No objects detected</span>';
+                }
+
+                // LLM Analysis
+                const analysis = data.llm_analysis;
+                if (analysis) {
+                    const tColor = { 'LOW': '#00ff88', 'MEDIUM': '#ffc800', 'HIGH': '#ff6400', 'CRITICAL': '#ff4444' }[analysis.threat_level] || '#888';
+                    detailEls.threat.innerHTML = `<span style="color:${tColor};font-weight:700;">${analysis.threat_level || 'N/A'}</span> — ${analysis.threat_justification || 'No justification provided'}`;
+                    detailEls.summary.textContent = analysis.summary || 'No summary available';
+
+                    if (analysis.recommendations && analysis.recommendations.length > 0) {
+                        detailEls.recs.innerHTML = analysis.recommendations.map(r => `• ${r}`).join('<br>');
+                    } else {
+                        detailEls.recs.innerHTML = '<span class="no-analysis">No recommendations</span>';
+                    }
+                } else {
+                    detailEls.threat.innerHTML = '<span class="no-analysis">LLM analysis not available</span>';
+                    detailEls.summary.innerHTML = '<span class="no-analysis">Run detection with Ollama enabled for AI analysis</span>';
+                    detailEls.recs.innerHTML = '<span class="no-analysis">-</span>';
+                }
+            } catch (e) {
+                detailEls.meta.textContent = 'Failed to load details.';
+                console.error('Failed to load detail:', e);
+            }
+        }
+
+        function closeDetailModal() {
+            detailModal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        detailModal.addEventListener('click', (e) => {
+            if (e.target === detailModal) closeDetailModal();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeDetailModal();
+        });
+
+        // Load on page load
+        loadStats();
+        loadHistory();
+    </script>
+</body>
+
+</html>
