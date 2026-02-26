@@ -6,29 +6,38 @@ import traceback
 import logging
 import requests
 import time
+import ctypes
 from flask import Flask, render_template, request, jsonify, url_for, send_from_directory
 from ultralytics import YOLO
 import cv2
 import webbrowser
-from threading import Timer
+from threading import Timer, Thread
 import database as db
 
 # -----------------------
 # Setup Logging (UTF-8 for Windows)
 # -----------------------
-log_file = "yolo_app_debug.log"
+if getattr(sys, 'frozen', False):
+    _log_dir = os.path.join(os.getenv('APPDATA'), 'YOLODetector')
+    os.makedirs(_log_dir, exist_ok=True)
+    log_file = os.path.join(_log_dir, "yolo_app_debug.log")
+else:
+    log_file = "yolo_app_debug.log"
+
+# Build log handlers — skip StreamHandler when there's no console (PyInstaller --noconsole)
+_log_handlers = [logging.FileHandler(log_file, encoding='utf-8')]
+if sys.stdout is not None:
+    _log_handlers.append(logging.StreamHandler(sys.stdout))
+
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler(log_file, encoding='utf-8'),
-        logging.StreamHandler(sys.stdout)
-    ]
+    handlers=_log_handlers
 )
 logger = logging.getLogger(__name__)
 
-# Set UTF-8 for console on Windows
-if sys.platform.startswith('win'):
+# Set UTF-8 for console on Windows (skip if no console, e.g. PyInstaller --noconsole)
+if sys.platform.startswith('win') and sys.stdout is not None:
     sys.stdout.reconfigure(encoding='utf-8')
 
 logger.info("=" * 80)
@@ -77,13 +86,16 @@ app.config["MAX_CONTENT_LENGTH"] = 500 * 1024 * 1024  # 500MB max
 # Load model
 model = None
 try:
+    import torch
     logger.info("Loading YOLO model...")
     model = YOLO(MODEL_PATH)
-    logger.info("[OK] Model loaded successfully")
+    DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
+    logger.info(f"[OK] Model loaded successfully on device: {DEVICE}")
     logger.info(f"Model names: {model.names}")
 except Exception as e:
     logger.error(f"[ERROR] Failed to load model: {e}")
     logger.error(traceback.format_exc())
+    DEVICE = "cpu"
 
 IMG_SIZE = 1280
 CONF_THRESH = 0.25
@@ -97,6 +109,31 @@ def check_ollama_available():
         return response.status_code == 200
     except Exception:
         return False
+
+def show_ollama_warning():
+    """Show a non-blocking Windows popup if Ollama is not available.
+    Runs in a background thread so Flask is never blocked."""
+    try:
+        if not check_ollama_available():
+            logger.warning("Ollama/LLaVA not detected — showing user warning.")
+            MB_OK = 0x00000000
+            MB_ICONINFORMATION = 0x00000040
+            ctypes.windll.user32.MessageBoxW(
+                0,
+                "Semantic Analysis component (Ollama/LLaVA) was not detected.\n\n"
+                "The object detection system will still work perfectly, but AI "
+                "intelligence reports will be disabled.\n\n"
+                "To enable Semantic Analysis later:\n"
+                "1. Install Ollama from https://ollama.com\n"
+                "2. Open a terminal and run: ollama pull llava:7b\n"
+                "3. Restart this application.",
+                "Semantic Analysis Disabled",
+                MB_OK | MB_ICONINFORMATION
+            )
+        else:
+            logger.info("Ollama/LLaVA detected — semantic analysis available.")
+    except Exception as e:
+        logger.error(f"Error in Ollama startup check: {e}")
 
 def get_semantic_explanation(detections: dict, image_path: str = None, detection_details: list = None) -> dict:
     """Get structured LLM explanation for detected classes
@@ -384,7 +421,7 @@ def process():
                 filepath, 
                 imgsz=IMG_SIZE, 
                 conf=CONF_THRESH, 
-                device="cpu",  # GPU requires PyTorch with CUDA
+                device=DEVICE,
                 verbose=False
             )
             
@@ -579,15 +616,20 @@ def api_delete_detection(detection_id):
 
 
 def open_browser():
-    webbrowser.open('http://127.0.0.1:5000/')
+    webbrowser.open_new('http://127.0.0.1:5000/')
 
 if __name__ == "__main__":
     logger.info("Starting Flask server...")
     
     if getattr(sys, 'frozen', False):
-        timer = Timer(2, open_browser)
-        timer.daemon = True
-        timer.start()
+        # Non-blocking Ollama check — runs in background, never blocks Flask
+        ollama_thread = Thread(target=show_ollama_warning, daemon=True)
+        ollama_thread.start()
+        
+        # Open browser in a NEW WINDOW after Flask has had time to start
+        browser_timer = Timer(2, open_browser)
+        browser_timer.daemon = True
+        browser_timer.start()
     
     logger.info("Server running on http://127.0.0.1:5000")
     logger.info("Debug endpoint: http://127.0.0.1:5000/debug")

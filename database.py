@@ -5,12 +5,19 @@ Stores detection history, confidence scores, processing metrics, and LLM analysi
 
 import sqlite3
 import os
+import sys
 import json
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 
-# Database path (same directory as app.py)
-DB_PATH = os.path.join(os.path.dirname(__file__), "detections.db")
+# Database path — use APPDATA when running as a frozen PyInstaller exe
+# (PyInstaller's _MEIPASS temp directory is read-only)
+if getattr(sys, 'frozen', False):
+    _db_dir = os.path.join(os.getenv('APPDATA'), 'YOLODetector')
+    os.makedirs(_db_dir, exist_ok=True)
+    DB_PATH = os.path.join(_db_dir, "detections.db")
+else:
+    DB_PATH = os.path.join(os.path.dirname(__file__), "detections.db")
 
 
 def get_connection():
